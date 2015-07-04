@@ -2,10 +2,11 @@ package percolation;
 
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
+
 public class Percolation {
-    private WeightedQuickUnionUF wuf1;
-    private WeightedQuickUnionUF wuf2;
-    private boolean[] open;
+    private WeightedQuickUnionUF wuf;
+    private boolean[] isSiteOpen;
+    private boolean[] isSiteConnectedToBottom;
     private int N;
     
     /*
@@ -14,9 +15,14 @@ public class Percolation {
     public Percolation(int N) {
         if (N <= 0) throw new IllegalArgumentException();
         this.N = N;
-        wuf1 = new WeightedQuickUnionUF(N * N + 2);
-        wuf2 = new WeightedQuickUnionUF(N * N + 1);
-        open = new boolean[N * N + 2];
+        wuf = new WeightedQuickUnionUF(N * N + 1);
+        isSiteOpen = new boolean[N * N + 1];
+        isSiteConnectedToBottom = new boolean[N * N + 1];
+        
+        for (int i = N * (N - 1); i < N * N; i++) {
+            isSiteConnectedToBottom[i] = true;
+        }
+
     }
 
     private boolean indicesAreInvalid(int i , int j) {
@@ -28,54 +34,49 @@ public class Percolation {
      */
     private int indexOf(int i, int j) {
         if (indicesAreInvalid(i, j)) throw new IndexOutOfBoundsException();
-        return (i - 1) * N + (j - 1);
+        return (i - 1) * N + (j - 1);  
     }
     
     /*
      * Opens site (row i, column j) if it is not open already
      */
     public void open(int i, int j) {
-       // StdOut.println();
         
         if (indicesAreInvalid(i, j)) throw new IndexOutOfBoundsException();
         
         int p = indexOf(i, j);
         
-        open[p] = true;
+        isSiteOpen[p] = true;
         
         if (i == 1) {
-            wuf1.union(p, N * N);
-            wuf2.union(p, N * N);
-        }
-        if (i == N) {
-            wuf1.union(p, N * N + 1);
+            wuf.union(p, N * N);
         }
         
-        if (i > 1) {
-            if (isOpen(i - 1, j)) {
-                wuf1.union(p , indexOf(i - 1 , j));
-                wuf2.union(p , indexOf(i - 1 , j));
-            }
+        if (i > 1 && isOpen(i - 1, j)) {
+            int q = indexOf(i - 1, j);
+            boolean unionIsConnectedToBottom = isSiteConnectedToBottom[wuf.find(q)] | isSiteConnectedToBottom[wuf.find(p)];
+            wuf.union(p , q);
+            isSiteConnectedToBottom[wuf.find(q)] = unionIsConnectedToBottom;
         }
-        if (j > 1) {
-            if (isOpen(i, j - 1)) {
-                wuf1.union(p , indexOf(i, j - 1));
-                wuf2.union(p , indexOf(i, j - 1));
-            }
+        if (j > 1 && isOpen(i, j - 1)) {
+            int q = indexOf(i, j - 1);
+            boolean unionIsConnectedToBottom = isSiteConnectedToBottom[wuf.find(q)] | isSiteConnectedToBottom[wuf.find(p)];
+            wuf.union(p , q);
+            isSiteConnectedToBottom[wuf.find(q)] = unionIsConnectedToBottom;
         }
-        if (i < N) {
-            if (isOpen(i + 1, j)) {
-                wuf1.union(p , indexOf(i + 1 , j));
-                wuf2.union(p , indexOf(i + 1 , j));
-            }
+        if (i < N && isOpen(i + 1, j)) {
+            int q = indexOf(i + 1, j);
+            boolean unionIsConnectedToBottom = isSiteConnectedToBottom[wuf.find(q)] | isSiteConnectedToBottom[wuf.find(p)];
+            wuf.union(p , q);
+            isSiteConnectedToBottom[wuf.find(q)] = unionIsConnectedToBottom;
+         }
+        if (j < N && isOpen(i, j + 1)) {
+            int q = indexOf(i, j + 1);
+            boolean unionIsConnectedToBottom = isSiteConnectedToBottom[wuf.find(q)] | isSiteConnectedToBottom[wuf.find(p)];
+            wuf.union(p , q);
+            isSiteConnectedToBottom[wuf.find(q)] = unionIsConnectedToBottom;
         }
-        if (j < N) {
-            if (isOpen(i, j + 1)) {
-                wuf1.union(p , indexOf(i , j + 1));
-                wuf2.union(p , indexOf(i , j + 1));
-            }
-        }
-       
+     
     }
     
     /*
@@ -83,7 +84,7 @@ public class Percolation {
      */
     public boolean isOpen(int i, int j) {
         if (indicesAreInvalid(i, j)) throw new IndexOutOfBoundsException();
-        return open[indexOf(i, j)];
+        return isSiteOpen[indexOf(i, j)];
     }
     
     /*
@@ -91,15 +92,14 @@ public class Percolation {
      */
     public boolean isFull(int i, int j) {
         if (indicesAreInvalid(i, j)) throw new IndexOutOfBoundsException();
-        //StdOut.print(wuf1.find(indexOf(i, j)) + " ");
-        return wuf2.connected(indexOf(i, j), N * N);
+        return wuf.connected(indexOf(i, j), N * N);
     }
     
     /*
      * Does the system percolate?
      */
     public boolean percolates() {
-        return wuf1.connected(N * N , N * N + 1);
+        return isSiteConnectedToBottom[wuf.find(N * N)];
     }
     
     /*
