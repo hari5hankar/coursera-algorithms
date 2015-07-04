@@ -10,7 +10,7 @@ public class Percolation {
     private int N;
     
     /*
-     * Creates an N-by-N (+ 2 virtual sites) grid, with all sites blocked
+     * Creates an N-by-N (+ 2 virtual sites) grid, with all sites blocked.
      */
     public Percolation(int N) {
         if (N <= 0) throw new IllegalArgumentException();
