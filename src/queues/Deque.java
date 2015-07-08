@@ -7,7 +7,7 @@ public class Deque<Item> implements Iterable<Item> {
     private Node<Item> tail;
     private int N;
 
-    private class Node<Item> {
+    private static class Node<Item> {
         Item data;
         Node<Item> next;
         Node<Item> previous;
@@ -32,13 +32,18 @@ public class Deque<Item> implements Iterable<Item> {
 
     // add the item to the front
     public void addFirst(Item item) {
+        if (item == null)
+            throw new java.lang.NullPointerException();
         Node<Item> oldHead = head;
         head = new Node<Item>();
-        if (tail == null)
+        head.data = item;
+        if (tail == null) {
             tail = head;
-        else {
+            head.next = null; // default?
+            tail.previous = null; // default?
+        } else {
             head.next = oldHead;
-            head.previous = null;
+            head.previous = null; // default?
             oldHead.previous = head;
         }
         N++;
@@ -46,13 +51,16 @@ public class Deque<Item> implements Iterable<Item> {
 
     // add the item to the end
     public void addLast(Item item) {
-
+        if (item == null)
+            throw new java.lang.NullPointerException();
         Node<Item> oldTail = tail;
         tail = new Node<Item>();
         tail.data = item;
-        if (head == null)
+        if (head == null) {
             head = tail;
-        else {
+            tail.next = null;
+            tail.previous = null;
+        } else {
             oldTail.next = tail;
             tail.previous = oldTail;
             tail.next = null;
@@ -65,9 +73,12 @@ public class Deque<Item> implements Iterable<Item> {
         if (isEmpty())
             throw new java.util.NoSuchElementException("Deque underflow");
         Item data = head.data;
+        head.data = null; // required?
         head = head.next;
-        head.previous = null;
         N--;
+        if (head != null) {
+            head.previous = null;
+        }
         if (isEmpty()) {
             tail = null;
         }
@@ -79,8 +90,12 @@ public class Deque<Item> implements Iterable<Item> {
         if (isEmpty())
             throw new java.util.NoSuchElementException("Deque underflow");
         Item data = tail.data;
+        tail.data = null;
         tail = tail.previous;
-        tail.next = null;
+        N--;
+        if (tail != null) {
+            tail.next = null;
+        }
         if (isEmpty()) {
             head = null;
         }
@@ -94,20 +109,29 @@ public class Deque<Item> implements Iterable<Item> {
 
     private class DequeIterator implements Iterator<Item> {
 
+        Node<Item> currentNode = head;
+
         public boolean hasNext() {
-            return false;
+            return currentNode != null;
         }
 
         public void remove() {
-            /* not supported */
+            throw new java.lang.UnsupportedOperationException();
         }
 
         public Item next() {
-            return null;
+            Item data = currentNode.data;
+            currentNode = currentNode.next;
+            return data;
         }
     }
 
+    // unit testing
     public static void main(String[] args) {
-        // unit testing
+
+        Deque<Integer> d = new Deque<>();
+        d.addFirst(1);
+        System.out.println(d.removeFirst());
+        System.out.println(d.removeFirst());
     }
 }
